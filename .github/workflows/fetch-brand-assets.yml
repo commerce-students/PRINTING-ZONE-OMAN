@@ -1,0 +1,27 @@
+name: fetch-brand-assets
+on:
+  push:
+    branches: [arena/49ca0017-printing-zone-oman]
+    paths: ['.github/workflows/fetch-brand-assets.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download original brand assets
+        run: |
+          set -x
+          mkdir -p public/brand
+          curl -sSL --max-time 60 -o public/brand/printing-zone-oman-logo.png "https://www.printingzoneoman.com/wp-content/uploads/2021/05/logo.png"
+          file public/brand/* || true
+          sha256sum public/brand/* || true
+          ls -la public/brand
+      - name: Commit assets
+        run: |
+          git config user.name "brand-asset-bot"
+          git config user.email "brand-asset-bot@users.noreply.github.com"
+          git add -A public/brand
+          git commit -m "chore(brand): add original logo asset [skip ci]" || echo "nothing to commit"
+          git push
