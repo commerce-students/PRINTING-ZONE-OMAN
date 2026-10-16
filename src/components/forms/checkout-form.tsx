@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { placeOrderAction } from "@/app/actions/orders";
 import { ConsentCheckbox, Field, FormAlert, TextArea, TextInput } from "@/components/forms/fields";
 import { SubmitButton } from "@/components/forms/submit-button";
@@ -11,6 +12,10 @@ const initialState: FormState = { status: "idle" };
 
 export function CheckoutForm({ requiresQuotation }: { requiresQuotation: boolean }) {
   const [state, formAction] = useActionState(placeOrderAction, initialState);
+  useEffect(() => {
+    if (state.status === "success") toast.success(state.message);
+    if (state.status === "error" && state.message) toast.error(state.message);
+  }, [state]);
   const [fulfilment, setFulfilment] = useState<"collection" | "delivery">("collection");
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
 

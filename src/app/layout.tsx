@@ -3,6 +3,8 @@ import "./globals.css";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { WhatsAppButton } from "@/components/site/whatsapp-button";
+import { CookieConsent } from "@/components/site/cookie-consent";
+import { Toaster } from "sonner";
 import { computeTotals } from "@/lib/cart";
 import { getCart } from "@/lib/cart-session";
 import { site, verified } from "@/lib/site";
@@ -44,7 +46,7 @@ export const metadata: Metadata = {
       },
     ],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { card: "summary_large_image", images: ["/media/hero-print-collateral.webp"] },
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
 };
@@ -87,10 +89,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </main>
         <Footer />
         <WhatsAppButton />
+        <CookieConsent />
+        <Toaster richColors position="top-center" />
         <script
           type="application/ld+json"
           // Structured data uses only facts published by the company itself.
           dangerouslySetInnerHTML={{ __html: JSON.stringify(businessJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: site.fullName,
+              url: site.url,
+              potentialAction: {
+                "@type": "SearchAction",
+                target: `${site.url}/products?q={search_term_string}`,
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
         />
       </body>
     </html>

@@ -2,13 +2,20 @@ import type { NextConfig } from "next";
 
 /**
  * Printing Zone Oman — website concept build.
- *
- * Notes for whoever ships this:
- * - No third-party image hosts are configured on purpose. All imagery in this
- *   concept lives in `public/media` so the build has no external dependencies.
- * - Server Actions are used for the cart, checkout and enquiry forms; the upload
- *   limit below is a hard ceiling for artwork files posted to those actions.
  */
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "frame-ancestors 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join("; ");
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -18,7 +25,7 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    formats: ["image/webp"],
+    formats: ["image/avif", "image/webp"],
     deviceSizes: [360, 480, 640, 828, 1080, 1200, 1600],
     imageSizes: [64, 96, 128, 200, 256, 320, 384],
   },
@@ -30,6 +37,10 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];

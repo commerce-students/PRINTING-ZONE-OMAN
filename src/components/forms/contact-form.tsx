@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
 import { submitContactAction } from "@/app/actions/enquiries";
 import {
   ConsentCheckbox,
@@ -27,6 +28,10 @@ const subjects = [
 
 export function ContactForm() {
   const [state, formAction] = useActionState(submitContactAction, initialState);
+  useEffect(() => {
+    if (state.status === "success") toast.success(state.message);
+    if (state.status === "error" && state.message) toast.error(state.message);
+  }, [state]);
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
 
   if (state.status === "success") {

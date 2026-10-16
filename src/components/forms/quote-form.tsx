@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { submitQuoteAction } from "@/app/actions/enquiries";
 import {
   ConsentCheckbox,
@@ -28,6 +29,10 @@ export function QuoteForm({
   defaultProductLabel?: string;
 }) {
   const [state, formAction] = useActionState(submitQuoteAction, initialState);
+  useEffect(() => {
+    if (state.status === "success") toast.success(state.message);
+    if (state.status === "error" && state.message) toast.error(state.message);
+  }, [state]);
   const [fileInfo, setFileInfo] = useState<{ name: string; size: number } | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState(defaultProductSlug ?? "");
