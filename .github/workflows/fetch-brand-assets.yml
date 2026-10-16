@@ -1,27 +1,56 @@
+# Manual asset-retrieval helper.
+#
+# Why this exists: this build environment has no direct network access to the
+# company's website, so approved brand assets (the original logo, and later the
+# company's own photography) are pulled through a GitHub Actions runner and
+# committed back to the branch, giving a byte-exact copy of the original file.
+#
+# It is manual-only (workflow_dispatch) so it never runs on its own and never
+# touches the company's live site unless a person explicitly asks it to.
+#
+# Usage: Actions → "fetch-brand-assets" → Run workflow, then give the asset URL
+# and the path to save it to inside the repository.
 name: fetch-brand-assets
+
 on:
-  push:
-    branches: [arena/49ca0017-printing-zone-oman]
-    paths: ['.github/workflows/fetch-brand-assets.yml']
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Full URL of the asset to retrieve (must be an asset the company has approved the use of)"
+        required: true
+        type: string
+      destination:
+        description: "Repository path to save the file to (e.g. public/brand/some-asset.png)"
+        required: true
+        type: string
+        default: "public/brand/asset.png"
+
 permissions:
   contents: write
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download original brand assets
+
+      - name: Download asset
         run: |
-          set -x
-          mkdir -p public/brand
-          curl -sSL --max-time 60 -o public/brand/printing-zone-oman-logo.png "https://www.printingzoneoman.com/wp-content/uploads/2021/05/logo.png"
-          file public/brand/* || true
-          sha256sum public/brand/* || true
-          ls -la public/brand
-      - name: Commit assets
+          set -euo pipefail
+          mkdir -p "$(dirname "${{ inputs.destination }}")"
+          curl -sSL --max-time 90 --fail -o "${{ inputs.destination }}" "${{ inputs.url }}"
+          echo "Retrieved:"; ls -la "${{ inputs.destination }}"
+          echo "SHA-256:"; sha256sum "${{ inputs.destination }}"
+
+      - name: Commit the retrieved asset
         run: |
+          set -euo pipefail
           git config user.name "brand-asset-bot"
           git config user.email "brand-asset-bot@users.noreply.github.com"
-          git add -A public/brand
-          git commit -m "chore(brand): add original logo asset [skip ci]" || echo "nothing to commit"
-          git push
+          git add "${{ inputs.destination }}"
+          if git diff --cached --quiet; then
+            echo "No change — the file already matches."
+          else
+            git commit -m "chore(brand): add approved asset ${{ inputs.destination }} [skip ci]"
+            git push
+          fi
